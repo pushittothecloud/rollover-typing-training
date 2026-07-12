@@ -21,22 +21,6 @@ export const PROGRESSION_CONSTANTS = {
 
 const getWordsForTarget = (target: string) => targetWordBank[target] ?? [target]
 
-const isWordsPracticePhase = (state: TrainingState) =>
-  state.currentPhase === 'words' ||
-  (state.currentPhase === 'metronome' && state.metronomeSubPhase === 'words')
-
-const buildParagraphPrompt = (focusWord: string, target: string) => {
-  const pool = [focusWord, ...getWordsForTarget(target).filter((word) => word !== focusWord)]
-  const stream: string[] = []
-
-  // Keep words mode as a clean rolling stream of words without sentence filler.
-  for (let index = 0; index < 14; index += 1) {
-    stream.push(pool[index % pool.length])
-  }
-
-  return stream.join(' ')
-}
-
 const setActivePrompt = (state: TrainingState, promptIndex: number) => {
   const itemCount = state.practiceItems.length
 
@@ -47,11 +31,7 @@ const setActivePrompt = (state: TrainingState, promptIndex: number) => {
   }
 
   state.currentPromptIndex = promptIndex % itemCount
-
-  const activeItem = state.practiceItems[state.currentPromptIndex]
-  state.currentPrompt = isWordsPracticePhase(state)
-    ? buildParagraphPrompt(activeItem, state.currentTarget)
-    : activeItem
+  state.currentPrompt = state.practiceItems[state.currentPromptIndex]
 }
 
 const syncPracticeItems = (state: TrainingState, phase: TrainingPhase) => {

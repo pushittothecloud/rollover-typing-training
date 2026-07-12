@@ -3,7 +3,7 @@ import "./App.css"
 import { processTargetKeystroke } from "./training/keystrokeEngine"
 import { startMetronome, stopMetronome, updateMetronomeInterval } from "./training/metronome"
 import { PROGRESSION_CONSTANTS } from "./training/progression"
-import { orderedTrainingTargets, coreBigrams, targetWordBank } from "./training/targets"
+import { orderedTrainingTargets, coreBigrams } from "./training/targets"
 import {
   clearTrainingFeedback,
   getTrainingStateSnapshot,
@@ -20,45 +20,22 @@ const { ISOLATED_STREAK_REQUIRED, WORDS_REQUIRED, METRONOME_ISOLATED_REPS, METRO
 const clampMetronomeStartBpm = (bpm: number) => Math.min(300, Math.max(50, bpm))
 const ikiToBpm = (iki: number) => Math.round(60000 / iki)
 
-const buildPreviewItems = (
-  practiceItems: string[],
-  activeIndex: number,
-  currentTargetIndex: number,
-  currentPhase: string,
-  isolatedSuccessStreak: number,
-) => {
-  const previewItems: Array<{ item: string; state: "active" | "upcoming" }> = []
-
-  if (currentPhase === "isolated" || currentPhase === "metronome") {
-    const repeats = currentPhase === "isolated" ? Math.max(1, 5 - isolatedSuccessStreak) : 4
-    const activeItem = practiceItems[0] ?? orderedTrainingTargets[currentTargetIndex]
-    for (let count = 0; count < repeats; count += 1) {
-      previewItems.push({
-        item: activeItem,
-        state: count === 0 ? "active" : "upcoming",
-      })
-    }
-  } else {
-    practiceItems.forEach((item, index) => {
-      const actualIndex = (activeIndex + index) % practiceItems.length
-      previewItems.push({ item, state: actualIndex === 0 ? "active" : "upcoming" })
-    })
+const buildWordsDisplayPrompt = (practiceItems: string[], activeIndex: number) => {
+  if (!practiceItems.length) {
+    return ""
   }
 
-  let targetOffset = 0
-  while (previewItems.length < 28 && targetOffset < orderedTrainingTargets.length) {
-    const targetIndex = (currentTargetIndex + targetOffset) % orderedTrainingTargets.length
-    const target = orderedTrainingTargets[targetIndex]
-    const words = targetWordBank[target] ?? [target]
-    words.forEach((word) => {
-      if (previewItems.length >= 28) return
-      const alreadyCovered =
-        targetOffset === 0 && currentPhase !== "isolated" && practiceItems.includes(word)
-      if (!alreadyCovered) previewItems.push({ item: word, state: "upcoming" })
-    })
-    targetOffset += 1
+  const rotated = [
+    ...practiceItems.slice(activeIndex),
+    ...practiceItems.slice(0, activeIndex),
+  ]
+  const stream: string[] = []
+
+  for (let index = 0; index < 14; index += 1) {
+    stream.push(rotated[index % rotated.length])
   }
-  return previewItems
+
+  return stream.join(" ")
 }
 
 function App() {
@@ -138,47 +115,43 @@ function App() {
           ? METRONOME_ISOLATED_REPS
           : METRONOME_WORDS_REPS
 
-  const previewItems = buildPreviewItems(
-    snap.practiceItems,
-    snap.currentPromptIndex,
-    snap.currentTargetIndex,
-    snap.currentPhase,
-    snap.isolatedSuccessStreak,
-  )
-
   const buildPromptDisplay = () => {
-    const prompt = snap.currentPrompt
-    const normalizedPrompt = prompt.toLowerCase()
+    const inputPrompt = snap.currentPrompt
+    const normalizedInputPrompt = inputPrompt.toLowerCase()
     const normalizedInput = snap.currentInput.toLowerCase()
     const isWordsPhase =
       snap.currentPhase === "words" ||
       (snap.currentPhase === "metronome" && snap.metronomeSubPhase === "words")
-    const activePracticeWord = snap.practiceItems[snap.currentPromptIndex] ?? snap.currentTarget
+    const displayPrompt = isWordsPhase
+      ? buildWordsDisplayPrompt(snap.practiceItems, snap.currentPromptIndex)
+      : inputPrompt
+
+    const normalizedDisplayPrompt = displayPrompt.toLowerCase()
     const promptTarget = (
       isWordsPhase
-        ? activePracticeWord
+        ? inputPrompt
         : resolvePromptTarget(
-          snap.currentPrompt,
+          inputPrompt,
           snap.currentTarget,
           snap.history,
         )
     ).toLowerCase()
 
     const escapedTarget = promptTarget.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
-    const wholeWordMatch = normalizedPrompt.match(new RegExp(`\\b${escapedTarget}\\b`))
-    const targetStartIndex = wholeWordMatch?.index ?? normalizedPrompt.indexOf(promptTarget)
+    const wholeWordMatch = normalizedDisplayPrompt.match(new RegExp(`\\b${escapedTarget}\\b`))
+    const targetStartIndex = wholeWordMatch?.index ?? normalizedDisplayPrompt.indexOf(promptTarget)
     const targetLength = promptTarget.length
 
     let correctPrefixLength = 0
-    const compareLength = Math.min(prompt.length, snap.currentInput.length)
+    const compareLength = Math.min(inputPrompt.length, snap.currentInput.length)
     while (
       correctPrefixLength < compareLength &&
-      normalizedPrompt[correctPrefixLength] === normalizedInput[correctPrefixLength]
+      normalizedInputPrompt[correctPrefixLength] === normalizedInput[correctPrefixLength]
     ) {
       correctPrefixLength += 1
     }
 
-    const typedLength = Math.min(snap.currentInput.length, prompt.length)
+    const typedLength = Math.min(snap.currentInput.length, inputPrompt.length)
     const targetEndIndex = targetStartIndex === -1 ? -1 : targetStartIndex + targetLength
     const isTargetComplete =
       targetStartIndex !== -1 &&
@@ -186,7 +159,7 @@ function App() {
 
     return (
       <>
-        {Array.from(prompt).map((character, index) => {
+        {Array.from(displayPrompt).map((character, index) => {
           const classes = ["typed-char"]
 
           if (index < correctPrefixLength) {
@@ -197,7 +170,7 @@ function App() {
             classes.push("is-untyped")
           }
 
-          if (index === typedLength && typedLength < prompt.length) {
+          if (index === targetStartIndex + typedLength && typedLength < targetLength) {
             classes.push("is-current")
           }
 
@@ -312,12 +285,6 @@ function App() {
                 </span>
               )
             })}
-          </div>
-
-          <div className="practice-strip" aria-label="Upcoming practice items">
-            {previewItems.map(({ item, state }, index) => (
-              <span key={`${item}-${index}`} className={`practice-chip is-${state}`}>{item}</span>
-            ))}
           </div>
 
           {snap.feedbackTone === "failure" && snap.lastMeasuredIKI !== null && (
