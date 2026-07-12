@@ -1,0 +1,314 @@
+.typing-trainer-shell {
+  position: relative;
+  min-height: 100vh;
+  display: grid;
+  gap: 2rem;
+  padding: 3.5rem 1.25rem;
+  align-content: start;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at top, rgba(255, 221, 179, 0.12), transparent 30%),
+    linear-gradient(180deg, #17110f 0%, #090807 100%);
+}
+
+.shell-header,
+.shell-main {
+  width: min(100%, 1100px);
+  margin: 0 auto;
+}
+
+.shell-header {
+  display: grid;
+  gap: 0.9rem;
+}
+
+.shell-eyebrow,
+.shell-label,
+.phase-pill {
+  margin: 0;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  font-size: 0.76rem;
+}
+
+.shell-eyebrow,
+.shell-label {
+  color: rgba(230, 222, 210, 0.66);
+}
+
+.shell-header h1,
+.shell-panel h2,
+.shell-copy,
+.shell-panel p {
+  margin: 0;
+}
+
+.shell-header h1 {
+  font-size: clamp(2.8rem, 7vw, 5.6rem);
+  line-height: 0.92;
+  max-width: 10ch;
+}
+
+.shell-copy {
+  max-width: 42rem;
+  color: rgba(230, 222, 210, 0.78);
+  line-height: 1.7;
+}
+
+.shell-main {
+  display: grid;
+  grid-template-columns: 280px minmax(0, 1fr) 220px;
+  gap: 1rem;
+  align-items: stretch;
+}
+
+.shell-panel {
+  padding: 1.5rem;
+  border: 1px solid rgba(230, 222, 210, 0.12);
+  background: rgba(247, 242, 235, 0.04);
+  backdrop-filter: blur(10px);
+  box-shadow: 0 18px 60px rgba(0, 0, 0, 0.18);
+}
+
+.shell-panel h2 {
+  font-size: 2rem;
+}
+
+.shell-panel p {
+  color: rgba(230, 222, 210, 0.8);
+  line-height: 1.6;
+}
+
+.shell-controls,
+.shell-stats {
+  display: grid;
+  gap: 1.4rem;
+  align-content: start;
+}
+
+.iki-control,
+.iki-number {
+  display: grid;
+  gap: 0.65rem;
+  color: rgba(230, 222, 210, 0.86);
+}
+
+.iki-control input,
+.iki-number input {
+  width: 100%;
+}
+
+.iki-control input {
+  accent-color: #ffd166;
+}
+
+.iki-number input {
+  border: 1px solid rgba(230, 222, 210, 0.16);
+  background: rgba(10, 10, 10, 0.45);
+  color: inherit;
+  padding: 0.8rem 0.9rem;
+  font: inherit;
+}
+
+.prompt-panel {
+  display: grid;
+  gap: 1rem;
+  align-content: center;
+  justify-items: center;
+  text-align: center;
+  min-height: 420px;
+  background:
+    radial-gradient(circle at top, rgba(255, 209, 102, 0.09), transparent 45%),
+    rgba(247, 242, 235, 0.04);
+  transition:
+    border-color 180ms ease,
+    box-shadow 180ms ease,
+    background-color 180ms ease,
+    transform 180ms ease;
+}
+
+.prompt-panel:focus-within {
+  outline: 2px solid rgba(255, 209, 102, 0.75);
+  outline-offset: 4px;
+}
+
+.practice-strip {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.65rem;
+  max-width: 44rem;
+  padding: 0.5rem;
+}
+
+.practice-chip {
+  padding: 0.35rem 0.55rem;
+  border-radius: 0.6rem;
+  border: 1px solid transparent;
+  background: transparent;
+  color: rgba(230, 222, 210, 0.48);
+  font-size: 1.05rem;
+  line-height: 1.2;
+  transition:
+    transform 140ms ease,
+    border-color 140ms ease,
+    background-color 140ms ease,
+    color 140ms ease,
+    opacity 140ms ease;
+}
+
+.practice-chip.is-active {
+  border-color: rgba(255, 209, 102, 0.8);
+  background: rgba(255, 209, 102, 0.14);
+  color: #fff0c3;
+  transform: translateY(-2px);
+}
+
+.practice-chip.is-upcoming {
+  color: rgba(230, 222, 210, 0.76);
+}
+
+.prompt-success {
+  border-color: rgba(52, 211, 153, 0.55);
+  background:
+    radial-gradient(circle at top, rgba(52, 211, 153, 0.12), transparent 45%),
+    rgba(247, 242, 235, 0.05);
+  box-shadow:
+    0 18px 60px rgba(0, 0, 0, 0.18),
+    0 0 0 1px rgba(52, 211, 153, 0.08),
+    0 0 28px rgba(52, 211, 153, 0.12);
+}
+
+.prompt-failure {
+  border-color: rgba(248, 113, 113, 0.55);
+  background:
+    radial-gradient(circle at top, rgba(248, 113, 113, 0.12), transparent 45%),
+    rgba(247, 242, 235, 0.05);
+  box-shadow:
+    0 18px 60px rgba(0, 0, 0, 0.18),
+    0 0 0 1px rgba(248, 113, 113, 0.08),
+    0 0 28px rgba(248, 113, 113, 0.12);
+}
+
+.prompt-success .prompt-focus-target,
+.prompt-success .typed-display {
+  border-color: rgba(52, 211, 153, 0.36);
+}
+
+.prompt-success .typed-display {
+  box-shadow: inset 0 0 0 1px rgba(52, 211, 153, 0.12);
+}
+
+.prompt-failure .prompt-focus-target,
+.prompt-failure .typed-display {
+  border-color: rgba(248, 113, 113, 0.34);
+}
+
+.prompt-failure .typed-display {
+  box-shadow: inset 0 0 0 1px rgba(248, 113, 113, 0.1);
+}
+
+.phase-pill {
+  padding: 0.45rem 0.8rem;
+  border: 1px solid rgba(230, 222, 210, 0.16);
+  border-radius: 999px;
+  color: rgba(230, 222, 210, 0.82);
+}
+
+.prompt-display {
+  font-family: var(--serif);
+  font-size: clamp(4rem, 12vw, 7.5rem);
+  line-height: 0.9;
+  letter-spacing: 0.02em;
+  max-width: 10ch;
+  overflow-wrap: anywhere;
+}
+
+.prompt-fragment {
+  display: inline;
+}
+
+.prompt-context {
+  color: rgba(230, 222, 210, 0.34);
+}
+
+.prompt-focus-target {
+  color: #fff0c3;
+  background: rgba(255, 209, 102, 0.14);
+  border-radius: 0.25rem;
+  padding: 0 0.1em;
+  border: 1px solid transparent;
+}
+
+.prompt-target {
+  font-size: 1rem;
+  color: rgba(255, 209, 102, 0.92);
+}
+
+.prompt-iki {
+  font-size: 1.1rem;
+}
+
+.typed-display {
+  width: min(100%, 28rem);
+  min-height: 3.25rem;
+  padding: 0.9rem 1rem;
+  border: 1px solid rgba(230, 222, 210, 0.14);
+  background: rgba(10, 10, 10, 0.42);
+  color: rgba(230, 222, 210, 0.94);
+  font-size: 1.1rem;
+  line-height: 1.4;
+  text-align: center;
+  overflow-wrap: anywhere;
+}
+
+.prompt-hint {
+  max-width: 32rem;
+  font-size: 0.95rem;
+  color: rgba(230, 222, 210, 0.6);
+}
+
+.prompt-focus {
+  font-size: 0.88rem;
+  color: rgba(255, 209, 102, 0.82);
+}
+
+.practice-input {
+  width: min(100%, 18rem);
+  padding: 0.9rem 1rem;
+  border: 1px solid rgba(255, 209, 102, 0.24);
+  background: rgba(10, 10, 10, 0.42);
+  color: rgba(230, 222, 210, 0.94);
+  font: inherit;
+  text-align: center;
+}
+
+.practice-input::placeholder {
+  color: rgba(230, 222, 210, 0.38);
+}
+
+.practice-input:focus {
+  outline: none;
+  border-color: rgba(255, 209, 102, 0.72);
+}
+
+@media (max-width: 960px) {
+  .shell-main {
+    grid-template-columns: 1fr;
+  }
+
+  .prompt-panel {
+    order: -1;
+    min-height: 340px;
+  }
+}
+
+@media (max-width: 640px) {
+  .typing-trainer-shell {
+    padding: 2.75rem 1rem;
+  }
+
+  .shell-panel {
+    padding: 1.2rem;
+  }
+}

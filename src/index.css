@@ -1,0 +1,75 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --paper-bg: #f7f2eb;
+  --paper-fg: #2b2118;
+  --ink-bg: #080706;
+  --ink-fg: #e6ded2;
+  --serif: 'Iowan Old Style', 'Palatino Linotype', 'Book Antiqua', serif;
+  --mono: 'Cascadia Mono', 'IBM Plex Mono', 'Courier New', monospace;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  margin: 0;
+  min-height: 100%;
+  width: 100%;
+}
+
+body {
+  min-height: 100vh;
+  font-family: var(--mono);
+  color: var(--ink-fg);
+  background-color: var(--ink-bg);
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: var(--serif);
+}
+
+.ProseMirror {
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.ProseMirror p.is-editor-empty:first-child::before {
+  content: attr(data-placeholder);
+  color: rgba(231, 220, 204, 0.28);
+  float: left;
+  height: 0;
+  pointer-events: none;
+}
+
+.react-flow__attribution {
+  display: none;
+}
+
+.liminal-fade {
+  animation: liminalPulse 20s ease-in-out infinite;
+}
+
+@keyframes liminalPulse {
+  0% {
+    opacity: 0.02;
+  }
+  50% {
+    opacity: 0.1;
+  }
+  100% {
+    opacity: 0.02;
+  }
+}

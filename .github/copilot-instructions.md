@@ -1,0 +1,12 @@
+- [x] Verify that the copilot-instructions.md file in the .github directory is created. - Completed: file created in .github.
+- [x] Clarify Project Requirements - Completed: user specified Vite React SPA + Zustand + React Flow + Tiptap + Tailwind + Framer Motion and detailed UX.
+- [x] Scaffold the Project - Completed: Vite React TypeScript app scaffolded in current directory and dependencies installed.
+- [x] Customize the Project - Completed: implemented Toulmin gate, Tiptap editor detach flow, React Flow textlets, SCAMPER dock/prompts, pull trigger, liminal triggers, and Tailwind theming.
+- [x] Install Required Extensions - Skipped: no extensions were explicitly required by project setup information.
+- [x] Compile the Project - Completed: lint and production build executed successfully after fixing integration typing issue.
+- [x] Create and Run Task - Completed: added and launched VS Code task "Run Cognitive Writing App" (npm run dev).
+- [x] Launch the Project - Skipped: user chose to skip debug launch for now.
+- [x] Ensure Documentation is Complete - Completed: README updated and this checklist cleaned of HTML comments.
+- Work through each checklist item systematically.
+- Keep communication concise and focused.
+- Follow development best practices.
