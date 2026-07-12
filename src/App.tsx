@@ -7,6 +7,7 @@ import { orderedTrainingTargets, coreBigrams, targetWordBank } from "./training/
 import {
   clearTrainingFeedback,
   getTrainingStateSnapshot,
+  resolvePromptTarget,
   setAutoSpeedUp,
   setMetronomeStartIKI,
   setMetronomeCurrentIKI,
@@ -145,13 +146,37 @@ function App() {
     snap.isolatedSuccessStreak,
   )
 
-  // Build superimposed display: typed (white) + needed (grey)
-  const buildSuperimposedDisplay = () => {
-    const remaining = snap.currentPrompt.slice(snap.currentInput.length)
+  const buildPromptDisplay = () => {
+    const prompt = snap.currentPrompt
+    const normalizedPrompt = prompt.toLowerCase()
+    const normalizedInput = snap.currentInput.toLowerCase()
+    const promptTarget = resolvePromptTarget(
+      snap.currentPrompt,
+      snap.currentTarget,
+      snap.history,
+    ).toLowerCase()
+    const targetStartIndex = normalizedPrompt.indexOf(promptTarget)
+
+    if (targetStartIndex === -1) {
+      return <span className="typed-context">{prompt}</span>
+    }
+
+    const targetEndIndex = targetStartIndex + promptTarget.length
+    const typedPrefixLength = Math.min(snap.currentInput.length, prompt.length)
+    const hasValidPrefix = normalizedPrompt.startsWith(normalizedInput)
+    const isTargetComplete = hasValidPrefix && typedPrefixLength >= targetEndIndex
+
+    const before = prompt.slice(0, targetStartIndex)
+    const target = prompt.slice(targetStartIndex, targetEndIndex)
+    const after = prompt.slice(targetEndIndex)
+
     return (
       <>
-        <span style={{ color: "white" }}>{snap.currentInput}</span>
-        <span style={{ color: "#aaa" }}>{remaining}</span>
+        <span className="typed-context">{before}</span>
+        <span className={`typed-target ${isTargetComplete ? "is-complete" : "is-active"}`}>
+          {target}
+        </span>
+        <span className="typed-context">{after}</span>
       </>
     )
   }
@@ -260,7 +285,7 @@ function App() {
           )}
 
           <div className="typed-display" aria-live="polite">
-            {snap.currentInput === "" ? "Start typing\u2026" : buildSuperimposedDisplay()}
+            {buildPromptDisplay()}
           </div>
 
           <input

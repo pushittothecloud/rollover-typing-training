@@ -249,16 +249,35 @@
 }
 
 .typed-display {
-  width: min(100%, 28rem);
-  min-height: 3.25rem;
-  padding: 0.9rem 1rem;
+  width: min(100%, 46rem);
+  min-height: 4.25rem;
+  padding: 1rem 1.2rem;
   border: 1px solid rgba(230, 222, 210, 0.14);
   background: rgba(10, 10, 10, 0.42);
   color: rgba(230, 222, 210, 0.94);
-  font-size: 1.1rem;
-  line-height: 1.4;
-  text-align: center;
+  font-size: 2rem;
+  line-height: 1.35;
+  text-align: left;
   overflow-wrap: anywhere;
+}
+
+.typed-context {
+  color: rgba(230, 222, 210, 0.88);
+}
+
+.typed-target {
+  text-underline-offset: 0.16em;
+  text-decoration-thickness: 0.08em;
+}
+
+.typed-target.is-active {
+  color: #fff0c3;
+  text-decoration: underline;
+}
+
+.typed-target.is-complete {
+  color: rgba(230, 222, 210, 0.44);
+  text-decoration: none;
 }
 
 .prompt-hint {
@@ -392,5 +411,10 @@
 
   .shell-panel {
     padding: 1.2rem;
+  }
+
+  .typed-display {
+    font-size: 1.35rem;
+    line-height: 1.4;
   }
 }
