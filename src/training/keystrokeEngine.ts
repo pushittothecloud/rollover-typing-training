@@ -100,7 +100,13 @@ export const processTargetKeystroke = (
         trainingState.currentPhase === 'metronome'
           ? trainingState.metronomeCurrentIKI
           : trainingState.targetIKI
-      const isSuccess = measuredIKI <= effectiveTargetIKI
+
+      // In words phase, advance through the stream on correct completion.
+      // Timing pressure is handled in isolated/metronome phases.
+      const isSuccess =
+        trainingState.currentPhase === 'words'
+          ? true
+          : measuredIKI <= effectiveTargetIKI
 
       onResult(isSuccess, measuredIKI)
     }

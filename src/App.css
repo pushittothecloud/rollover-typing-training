@@ -291,10 +291,6 @@
 .typed-char.target-active {
   color: #f8fafc;
   background-color: rgba(56, 189, 248, 0.16);
-  text-decoration: underline;
-  text-decoration-color: #38bdf8;
-  text-decoration-thickness: 2px;
-  text-underline-offset: 0.16em;
 }
 
 .typed-char.target-complete {
