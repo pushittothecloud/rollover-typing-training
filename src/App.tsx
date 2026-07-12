@@ -156,27 +156,56 @@ function App() {
       snap.history,
     ).toLowerCase()
     const targetStartIndex = normalizedPrompt.indexOf(promptTarget)
+    const targetLength = promptTarget.length
 
-    if (targetStartIndex === -1) {
-      return <span className="typed-context">{prompt}</span>
+    let correctPrefixLength = 0
+    const compareLength = Math.min(prompt.length, snap.currentInput.length)
+    while (
+      correctPrefixLength < compareLength &&
+      normalizedPrompt[correctPrefixLength] === normalizedInput[correctPrefixLength]
+    ) {
+      correctPrefixLength += 1
     }
 
-    const targetEndIndex = targetStartIndex + promptTarget.length
-    const typedPrefixLength = Math.min(snap.currentInput.length, prompt.length)
-    const hasValidPrefix = normalizedPrompt.startsWith(normalizedInput)
-    const isTargetComplete = hasValidPrefix && typedPrefixLength >= targetEndIndex
-
-    const before = prompt.slice(0, targetStartIndex)
-    const target = prompt.slice(targetStartIndex, targetEndIndex)
-    const after = prompt.slice(targetEndIndex)
+    const typedLength = Math.min(snap.currentInput.length, prompt.length)
+    const targetEndIndex = targetStartIndex === -1 ? -1 : targetStartIndex + targetLength
+    const isTargetComplete =
+      targetStartIndex !== -1 &&
+      correctPrefixLength >= targetEndIndex
 
     return (
       <>
-        <span className="typed-context">{before}</span>
-        <span className={`typed-target ${isTargetComplete ? "is-complete" : "is-active"}`}>
-          {target}
-        </span>
-        <span className="typed-context">{after}</span>
+        {Array.from(prompt).map((character, index) => {
+          const classes = ["typed-char"]
+
+          if (index < correctPrefixLength) {
+            classes.push("is-correct")
+          } else if (index < typedLength) {
+            classes.push("is-incorrect")
+          } else {
+            classes.push("is-untyped")
+          }
+
+          if (targetStartIndex !== -1 && index >= targetStartIndex && index < targetEndIndex) {
+            if (isTargetComplete) {
+              classes.push("target-complete")
+            } else {
+              classes.push("target-active")
+            }
+          }
+
+          const displayCharacter = character === " " ? "·" : character
+
+          return (
+            <span
+              key={`${character}-${index}`}
+              className={classes.join(" ")}
+              aria-hidden="true"
+            >
+              {displayCharacter}
+            </span>
+          )
+        })}
       </>
     )
   }

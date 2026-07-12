@@ -261,21 +261,30 @@
   overflow-wrap: anywhere;
 }
 
-.typed-context {
-  color: rgba(230, 222, 210, 0.88);
+.typed-char {
+  white-space: pre;
 }
 
-.typed-target {
+.typed-char.is-untyped {
+  color: rgba(230, 222, 210, 0.9);
+}
+
+.typed-char.is-correct {
+  color: #ffffff;
+}
+
+.typed-char.is-incorrect {
+  color: #f87171;
+}
+
+.typed-char.target-active {
+  color: #fff0c3;
+  text-decoration: underline;
   text-underline-offset: 0.16em;
   text-decoration-thickness: 0.08em;
 }
 
-.typed-target.is-active {
-  color: #fff0c3;
-  text-decoration: underline;
-}
-
-.typed-target.is-complete {
+.typed-char.target-complete {
   color: rgba(230, 222, 210, 0.44);
   text-decoration: none;
 }
