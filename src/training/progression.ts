@@ -8,27 +8,17 @@ import { orderedTrainingTargets, targetWordBank } from './targets'
 
 const ISOLATED_STREAK_REQUIRED = 5
 const WORDS_REQUIRED = 10
-const MIXED_REQUIRED = 10
+const METRONOME_REPS_PER_STEP = 5
+const METRONOME_IKI_STEP = 25
+const METRONOME_INITIAL_MULTIPLIER = 6
 
-const shuffleItems = <T,>(items: T[]) => {
-  const shuffled = [...items]
-
-  for (let index = shuffled.length - 1; index > 0; index -= 1) {
-    const swapIndex = Math.floor(Math.random() * (index + 1))
-    ;[shuffled[index], shuffled[swapIndex]] = [shuffled[swapIndex], shuffled[index]]
-  }
-
-  return shuffled
-}
+export const PROGRESSION_CONSTANTS = {
+  ISOLATED_STREAK_REQUIRED,
+  WORDS_REQUIRED,
+  METRONOME_REPS_PER_STEP,
+} as const
 
 const getWordsForTarget = (target: string) => targetWordBank[target] ?? [target]
-
-const buildMixedItems = (target: string, history: string[]) => {
-  const currentTargetWords = getWordsForTarget(target)
-  const mixedItems = [...currentTargetWords, ...history]
-
-  return shuffleItems(mixedItems.length > 0 ? mixedItems : [target])
-}
 
 const setActivePrompt = (state: TrainingState, promptIndex: number) => {
   const itemCount = state.practiceItems.length
@@ -44,7 +34,7 @@ const setActivePrompt = (state: TrainingState, promptIndex: number) => {
 }
 
 const syncPracticeItems = (state: TrainingState, phase: TrainingPhase) => {
-  if (phase === 'isolated') {
+  if (phase === 'isolated' || phase === 'metronome') {
     state.practiceItems = [state.currentTarget]
     setActivePrompt(state, 0)
     return
@@ -55,9 +45,6 @@ const syncPracticeItems = (state: TrainingState, phase: TrainingPhase) => {
     setActivePrompt(state, 0)
     return
   }
-
-  state.practiceItems = buildMixedItems(state.currentTarget, state.history)
-  setActivePrompt(state, 0)
 }
 
 const advancePracticePrompt = (state: TrainingState) => {
@@ -73,7 +60,7 @@ const advancePracticePrompt = (state: TrainingState) => {
 const resetPhaseProgress = (state: TrainingState) => {
   state.isolatedSuccessStreak = 0
   state.wordsCompleted = 0
-  state.mixedCompleted = 0
+  state.metronomeRepsAtSpeed = 0
 }
 
 const moveToNextTarget = (state: TrainingState) => {
@@ -89,12 +76,12 @@ const moveToNextTarget = (state: TrainingState) => {
   state.currentTarget = orderedTrainingTargets[nextIndex]
 }
 
-const completeMixedPhase = (state: TrainingState) => {
-  state.history.push(state.currentTarget)
-  moveToNextTarget(state)
-  state.currentPhase = 'isolated'
-  resetPhaseProgress(state)
-  syncPracticeItems(state, state.currentPhase)
+const enterMetronomePhase = (state: TrainingState) => {
+  state.currentPhase = 'metronome'
+  state.wordsCompleted = 0
+  state.metronomePhaseIKI = state.targetIKI * METRONOME_INITIAL_MULTIPLIER
+  state.metronomeRepsAtSpeed = 0
+  syncPracticeItems(state, 'metronome')
 }
 
 export const advanceTrainingPhase = (isSuccess: boolean) => {
@@ -123,22 +110,38 @@ export const advanceTrainingPhase = (isSuccess: boolean) => {
         return state.currentPhase
       }
 
-      state.currentPhase = 'mixed'
-      state.wordsCompleted = 0
-      syncPracticeItems(state, state.currentPhase)
+      enterMetronomePhase(state)
       return state.currentPhase
     }
 
+    // metronome phase
     if (isSuccess) {
-      state.mixedCompleted += 1
-      advancePracticePrompt(state)
+      state.metronomeRepsAtSpeed += 1
+    } else {
+      state.metronomeRepsAtSpeed = 0
     }
 
-    if (state.mixedCompleted < MIXED_REQUIRED) {
+    if (state.metronomeRepsAtSpeed < METRONOME_REPS_PER_STEP) {
       return state.currentPhase
     }
 
-    completeMixedPhase(state)
+    state.metronomeRepsAtSpeed = 0
+
+    if (state.metronomePhaseIKI <= state.targetIKI) {
+      // Completed at target speed — advance to next target
+      state.history.push(state.currentTarget)
+      moveToNextTarget(state)
+      state.currentPhase = 'isolated'
+      resetPhaseProgress(state)
+      syncPracticeItems(state, 'isolated')
+      return state.currentPhase
+    }
+
+    // Speed up the metronome
+    state.metronomePhaseIKI = Math.max(
+      state.targetIKI,
+      state.metronomePhaseIKI - METRONOME_IKI_STEP,
+    )
     return state.currentPhase
   })
 }

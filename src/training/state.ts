@@ -1,6 +1,6 @@
 import { orderedTrainingTargets } from './targets'
 
-export const trainingPhases = ['isolated', 'words', 'mixed'] as const
+export const trainingPhases = ['isolated', 'words', 'metronome'] as const
 
 export type TrainingPhase = (typeof trainingPhases)[number]
 
@@ -10,11 +10,12 @@ export interface TrainingState {
   currentTarget: string
   currentPhase: TrainingPhase
   targetIKI: number
+  metronomePhaseIKI: number
+  metronomeRepsAtSpeed: number
   history: string[]
   currentTargetIndex: number
   isolatedSuccessStreak: number
   wordsCompleted: number
-  mixedCompleted: number
   practiceItems: string[]
   currentPrompt: string
   currentPromptIndex: number
@@ -34,15 +35,18 @@ const createTrainingSnapshot = (state: TrainingState): TrainingState => ({
   practiceItems: [...state.practiceItems],
 })
 
+const METRONOME_INITIAL_MULTIPLIER = 6
+
 export const trainingState: TrainingState = {
   currentTarget: initialTarget,
   currentPhase: 'isolated',
   targetIKI: 50,
+  metronomePhaseIKI: 50 * METRONOME_INITIAL_MULTIPLIER,
+  metronomeRepsAtSpeed: 0,
   history: [],
   currentTargetIndex: 0,
   isolatedSuccessStreak: 0,
   wordsCompleted: 0,
-  mixedCompleted: 0,
   practiceItems: [initialTarget],
   currentPrompt: initialTarget,
   currentPromptIndex: 0,
@@ -78,6 +82,13 @@ export const mutateTrainingState = <T,>(mutator: (state: TrainingState) => T) =>
 export const setTargetIKI = (targetIKI: number) => {
   mutateTrainingState((state) => {
     state.targetIKI = targetIKI
+  })
+}
+
+export const setMetronomePhaseIKI = (iki: number) => {
+  mutateTrainingState((state) => {
+    state.metronomePhaseIKI = Math.max(state.targetIKI, Math.min(1000, iki))
+    state.metronomeRepsAtSpeed = 0
   })
 }
 

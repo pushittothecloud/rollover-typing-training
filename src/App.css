@@ -23,8 +23,7 @@
 }
 
 .shell-eyebrow,
-.shell-label,
-.phase-pill {
+.shell-label {
   margin: 0;
   letter-spacing: 0.22em;
   text-transform: uppercase;
@@ -290,6 +289,89 @@
 .practice-input:focus {
   outline: none;
   border-color: rgba(255, 209, 102, 0.72);
+}
+
+/* Phase track */
+.phase-track {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.phase-pill {
+  padding: 0.35rem 0.75rem;
+  border: 1px solid rgba(230, 222, 210, 0.16);
+  border-radius: 999px;
+  color: rgba(230, 222, 210, 0.44);
+  font-size: 0.72rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  transition: border-color 200ms ease, color 200ms ease, background-color 200ms ease;
+}
+
+.phase-pill.is-active {
+  border-color: rgba(255, 209, 102, 0.72);
+  background: rgba(255, 209, 102, 0.12);
+  color: #fff0c3;
+}
+
+/* Metronome controls */
+.metronome-controls {
+  display: grid;
+  gap: 0.8rem;
+  padding-top: 0.5rem;
+  border-top: 1px solid rgba(230, 222, 210, 0.1);
+}
+
+.metronome-speed-display {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.beat-dot {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: rgba(255, 209, 102, 0.25);
+  border: 1px solid rgba(255, 209, 102, 0.45);
+  transition: background 60ms ease, box-shadow 60ms ease, transform 60ms ease;
+  flex-shrink: 0;
+}
+
+.beat-dot.is-active {
+  background: rgba(255, 209, 102, 0.9);
+  box-shadow: 0 0 12px rgba(255, 209, 102, 0.65);
+  transform: scale(1.25);
+}
+
+.beat-iki { font-size: 1.25rem; font-weight: 600; color: #fff0c3; }
+.beat-bpm { font-size: 0.82rem; color: rgba(230, 222, 210, 0.55); }
+
+.metronome-hint {
+  font-size: 0.82rem !important;
+  color: rgba(230, 222, 210, 0.52) !important;
+  line-height: 1.5;
+}
+
+/* Progress pips */
+.progress-pips { display: flex; gap: 0.4rem; flex-wrap: wrap; margin-top: 0.5rem; }
+
+.pip {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  border: 1px solid rgba(230, 222, 210, 0.28);
+  background: transparent;
+  transition: background 180ms ease, border-color 180ms ease;
+}
+
+.pip.is-filled {
+  background: rgba(255, 209, 102, 0.75);
+  border-color: rgba(255, 209, 102, 0.9);
 }
 
 @media (max-width: 960px) {
