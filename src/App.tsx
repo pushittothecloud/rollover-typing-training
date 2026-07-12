@@ -151,7 +151,7 @@ function App() {
     return (
       <>
         <span style={{ color: "white" }}>{snap.currentInput}</span>
-        <span style={{ color: "#666" }}>{remaining}</span>
+        <span style={{ color: "#aaa" }}>{remaining}</span>
       </>
     )
   }
