@@ -21,6 +21,43 @@ export const PROGRESSION_CONSTANTS = {
 
 const getWordsForTarget = (target: string) => targetWordBank[target] ?? [target]
 
+const isWordsPracticePhase = (state: TrainingState) =>
+  state.currentPhase === 'words' ||
+  (state.currentPhase === 'metronome' && state.metronomeSubPhase === 'words')
+
+const buildParagraphPrompt = (focusWord: string, target: string) => {
+  const companionWords = getWordsForTarget(target).filter((word) => word !== focusWord)
+  const companionA = companionWords[0] ?? target
+  const companionB = companionWords[1] ?? focusWord
+
+  return [
+    'we',
+    'thread',
+    focusWord,
+    'through',
+    'a',
+    'calm',
+    'drafting',
+    'line',
+    'then',
+    'cycle',
+    companionA,
+    'and',
+    companionB,
+    'while',
+    'keeping',
+    target,
+    'steady',
+    'across',
+    'the',
+    'paragraph',
+    'until',
+    'timing',
+    'feels',
+    'automatic',
+  ].join(' ')
+}
+
 const setActivePrompt = (state: TrainingState, promptIndex: number) => {
   const itemCount = state.practiceItems.length
 
@@ -31,7 +68,11 @@ const setActivePrompt = (state: TrainingState, promptIndex: number) => {
   }
 
   state.currentPromptIndex = promptIndex % itemCount
-  state.currentPrompt = state.practiceItems[state.currentPromptIndex]
+
+  const activeItem = state.practiceItems[state.currentPromptIndex]
+  state.currentPrompt = isWordsPracticePhase(state)
+    ? buildParagraphPrompt(activeItem, state.currentTarget)
+    : activeItem
 }
 
 const syncPracticeItems = (state: TrainingState, phase: TrainingPhase) => {
