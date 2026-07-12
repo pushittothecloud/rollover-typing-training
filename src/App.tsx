@@ -7,7 +7,6 @@ import { orderedTrainingTargets, coreBigrams, targetWordBank } from "./training/
 import {
   clearTrainingFeedback,
   getTrainingStateSnapshot,
-  resolvePromptTarget,
   setMetronomePhaseIKI,
   setTargetIKI,
   subscribeTrainingState,
@@ -62,16 +61,6 @@ const buildPreviewItems = (
     targetOffset += 1
   }
   return previewItems
-}
-
-const splitPromptByTarget = (prompt: string, target: string) => {
-  const idx = prompt.toLowerCase().indexOf(target.toLowerCase())
-  if (idx === -1) return { before: "", focus: prompt, after: "" }
-  return {
-    before: prompt.slice(0, idx),
-    focus: prompt.slice(idx, idx + target.length),
-    after: prompt.slice(idx + target.length),
-  }
 }
 
 function App() {
@@ -156,8 +145,6 @@ function App() {
     snap.isolatedSuccessStreak,
   )
 
-  const activePromptTarget = resolvePromptTarget(snap.currentPrompt, snap.currentTarget, snap.history)
-  const promptParts = splitPromptByTarget(snap.currentPrompt, activePromptTarget)
   const metronomeMaxIKI = snap.targetIKI * 8
 
   return (
@@ -228,12 +215,6 @@ function App() {
             {previewItems.map(({ item, state }, index) => (
               <span key={`${item}-${index}`} className={`practice-chip is-${state}`}>{item}</span>
             ))}
-          </div>
-
-          <div className="prompt-display" aria-live="polite">
-            <span className="prompt-fragment prompt-context">{promptParts.before}</span>
-            <span className="prompt-fragment prompt-focus-target">{promptParts.focus}</span>
-            <span className="prompt-fragment prompt-context">{promptParts.after}</span>
           </div>
 
           <p className="prompt-iki">Last IKI: {measuredIKIText}</p>
