@@ -21,6 +21,28 @@ export const PROGRESSION_CONSTANTS = {
 
 const getWordsForTarget = (target: string) => targetWordBank[target] ?? [target]
 
+const isWordsPracticePhase = (state: TrainingState) =>
+  state.currentPhase === 'words' ||
+  (state.currentPhase === 'metronome' && state.metronomeSubPhase === 'words')
+
+const buildWordsPracticePrompt = (words: string[], activeIndex: number) => {
+  if (!words.length) {
+    return ''
+  }
+
+  const rotated = [
+    ...words.slice(activeIndex),
+    ...words.slice(0, activeIndex),
+  ]
+  const stream: string[] = []
+
+  for (let index = 0; index < 14; index += 1) {
+    stream.push(rotated[index % rotated.length])
+  }
+
+  return stream.join(' ')
+}
+
 const setActivePrompt = (state: TrainingState, promptIndex: number) => {
   const itemCount = state.practiceItems.length
 
@@ -31,6 +53,12 @@ const setActivePrompt = (state: TrainingState, promptIndex: number) => {
   }
 
   state.currentPromptIndex = promptIndex % itemCount
+
+  if (isWordsPracticePhase(state)) {
+    state.currentPrompt = buildWordsPracticePrompt(state.practiceItems, state.currentPromptIndex)
+    return
+  }
+
   state.currentPrompt = state.practiceItems[state.currentPromptIndex]
 }
 

@@ -20,24 +20,6 @@ const { ISOLATED_STREAK_REQUIRED, WORDS_REQUIRED, METRONOME_ISOLATED_REPS, METRO
 const clampMetronomeStartBpm = (bpm: number) => Math.min(300, Math.max(50, bpm))
 const ikiToBpm = (iki: number) => Math.round(60000 / iki)
 
-const buildWordsDisplayPrompt = (practiceItems: string[], activeIndex: number) => {
-  if (!practiceItems.length) {
-    return ""
-  }
-
-  const rotated = [
-    ...practiceItems.slice(activeIndex),
-    ...practiceItems.slice(0, activeIndex),
-  ]
-  const stream: string[] = []
-
-  for (let index = 0; index < 14; index += 1) {
-    stream.push(rotated[index % rotated.length])
-  }
-
-  return stream.join(" ")
-}
-
 function App() {
   const snap = useSyncExternalStore(subscribeTrainingState, getTrainingStateSnapshot)
   const [flashTone, setFlashTone] = useState<"idle" | "success" | "failure">("idle")
@@ -122,14 +104,13 @@ function App() {
     const isWordsPhase =
       snap.currentPhase === "words" ||
       (snap.currentPhase === "metronome" && snap.metronomeSubPhase === "words")
-    const displayPrompt = isWordsPhase
-      ? buildWordsDisplayPrompt(snap.practiceItems, snap.currentPromptIndex)
-      : inputPrompt
+    const displayPrompt = inputPrompt
 
     const normalizedDisplayPrompt = displayPrompt.toLowerCase()
+    const activePracticeWord = snap.practiceItems[snap.currentPromptIndex] ?? snap.currentTarget
     const promptTarget = (
       isWordsPhase
-        ? inputPrompt
+        ? activePracticeWord
         : resolvePromptTarget(
           inputPrompt,
           snap.currentTarget,
@@ -170,7 +151,7 @@ function App() {
             classes.push("is-untyped")
           }
 
-          if (index === targetStartIndex + typedLength && typedLength < targetLength) {
+          if (index === typedLength && typedLength < displayPrompt.length) {
             classes.push("is-current")
           }
 

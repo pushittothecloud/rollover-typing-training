@@ -70,6 +70,34 @@ export const processTargetKeystroke = (
   const target = promptTarget.toLowerCase()
   const targetStartIndex = getTargetStartIndex(prompt, target)
 
+  const tryCompletePrompt = (nextInput: string) => {
+    if (nextInput !== prompt) {
+      return false
+    }
+
+    const hasCompleteTargetMeasurement = engineState.targetTimestamps.length === target.length
+    if (!hasCompleteTargetMeasurement) {
+      return false
+    }
+
+    const measuredIKI = getMeasuredIKI(engineState.targetTimestamps, target.length)
+    const effectiveTargetIKI =
+      trainingState.currentPhase === 'metronome'
+        ? trainingState.metronomeCurrentIKI
+        : trainingState.targetIKI
+
+    // In words phase, advance through the stream on correct completion.
+    // Timing pressure is handled in isolated/metronome phases.
+    const isSuccess =
+      trainingState.currentPhase === 'words'
+        ? true
+        : measuredIKI <= effectiveTargetIKI
+
+    onResult(isSuccess, measuredIKI)
+    resetEngineState()
+    return true
+  }
+
   if (event.key === 'Backspace') {
     event.preventDefault()
 
@@ -92,26 +120,18 @@ export const processTargetKeystroke = (
   if (event.key === ' ') {
     event.preventDefault()
 
-    const hasCompleteTargetMeasurement = engineState.targetTimestamps.length === target.length
-
-    if (trainingState.currentInput === prompt && hasCompleteTargetMeasurement) {
-      const measuredIKI = getMeasuredIKI(engineState.targetTimestamps, target.length)
-      const effectiveTargetIKI =
-        trainingState.currentPhase === 'metronome'
-          ? trainingState.metronomeCurrentIKI
-          : trainingState.targetIKI
-
-      // In words phase, advance through the stream on correct completion.
-      // Timing pressure is handled in isolated/metronome phases.
-      const isSuccess =
-        trainingState.currentPhase === 'words'
-          ? true
-          : measuredIKI <= effectiveTargetIKI
-
-      onResult(isSuccess, measuredIKI)
+    const nextInput = `${trainingState.currentInput} `
+    if (nextInput.length > prompt.length) {
+      return
     }
 
-    resetEngineState()
+    setCurrentInput(nextInput)
+
+    if (!prompt.startsWith(nextInput)) {
+      return
+    }
+
+    tryCompletePrompt(nextInput)
     return
   }
 
@@ -139,4 +159,6 @@ export const processTargetKeystroke = (
   if (isTargetCharacterIndex(characterIndex, targetStartIndex, target.length)) {
     engineState.targetTimestamps.push(performance.now())
   }
+
+  tryCompletePrompt(nextInput)
 }
