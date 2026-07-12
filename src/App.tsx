@@ -10,14 +10,12 @@ import {
   setAutoSpeedUp,
   setMetronomeStartIKI,
   setMetronomeCurrentIKI,
-  setTargetIKI,
   subscribeTrainingState,
 } from "./training/state"
 
 const { ISOLATED_STREAK_REQUIRED, WORDS_REQUIRED, METRONOME_ISOLATED_REPS, METRONOME_WORDS_REPS } =
   PROGRESSION_CONSTANTS
 
-const clampTargetIKI = (value: number) => Math.min(200, Math.max(20, value))
 const clampMetronomeStartBpm = (bpm: number) => Math.min(300, Math.max(50, bpm))
 const ikiToBpm = (iki: number) => Math.round(60000 / iki)
 
@@ -104,11 +102,6 @@ function App() {
     if (snap.currentPhase === "metronome") updateMetronomeInterval(snap.metronomeCurrentIKI)
   }, [snap.currentPhase, snap.metronomeCurrentIKI])
 
-  const handleTargetIKIChange = (value: string) => {
-    const parsed = Number.parseInt(value, 10)
-    if (!Number.isNaN(parsed)) setTargetIKI(clampTargetIKI(parsed))
-  }
-
   const handleMetronomeStartBpmChange = (value: string) => {
     const parsed = Number.parseInt(value, 10)
     if (!Number.isNaN(parsed)) setMetronomeStartIKI(clampMetronomeStartBpm(parsed))
@@ -148,11 +141,6 @@ function App() {
           ? METRONOME_ISOLATED_REPS
           : METRONOME_WORDS_REPS
 
-  const measuredIKIText =
-    snap.lastMeasuredIKI === null
-      ? "Awaiting first attempt"
-      : `${snap.lastMeasuredIKI.toFixed(1)} ms`
-
   const previewItems = buildPreviewItems(
     snap.practiceItems,
     snap.currentPromptIndex,
@@ -171,25 +159,6 @@ function App() {
 
       <main className="shell-main" aria-label="Typing trainer">
         <section className="shell-panel shell-controls">
-          <div>
-            <p className="shell-label">Target IKI</p>
-            <h2>{snap.targetIKI} ms</h2>
-            <p style={{ fontSize: "0.85rem", opacity: 0.6 }}>{ikiToBpm(snap.targetIKI)} BPM</p>
-          </div>
-          <label className="iki-control" htmlFor="target-iki-range">
-            <span>Adjust goal (ms)</span>
-            <input
-              id="target-iki-range" type="range" min="20" max="200" step="5"
-              value={snap.targetIKI} onChange={(e) => handleTargetIKIChange(e.target.value)}
-            />
-          </label>
-          <label className="iki-number" htmlFor="target-iki-number">
-            <span>Exact value</span>
-            <input
-              id="target-iki-number" type="number" min="20" max="200" step="1"
-              value={snap.targetIKI} onChange={(e) => handleTargetIKIChange(e.target.value)}
-            />
-          </label>
           {snap.currentPhase === "metronome" && (
             <div className="metronome-controls">
               <p className="shell-label">Metronome Start</p>
@@ -277,7 +246,11 @@ function App() {
             ))}
           </div>
 
-          <p className="prompt-iki">Last IKI: {measuredIKIText}</p>
+          {snap.feedbackTone === "failure" && snap.lastMeasuredIKI !== null && (
+            <p className="prompt-iki" title="Inter-keystroke interval—the time between your keystrokes. You exceeded your target!">
+              Missed: {snap.lastMeasuredIKI.toFixed(1)} ms
+            </p>
+          )}
 
           <div className="typed-display" aria-live="polite">
             {snap.currentInput || "Start typing\u2026"}
