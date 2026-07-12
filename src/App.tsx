@@ -197,6 +197,10 @@ function App() {
             classes.push("is-untyped")
           }
 
+          if (index === typedLength && typedLength < prompt.length) {
+            classes.push("is-current")
+          }
+
           if (targetStartIndex !== -1 && index >= targetStartIndex && index < targetEndIndex) {
             if (isTargetComplete) {
               classes.push("target-complete")
@@ -205,15 +209,13 @@ function App() {
             }
           }
 
-          const displayCharacter = character === " " ? "·" : character
-
           return (
             <span
               key={`${character}-${index}`}
               className={classes.join(" ")}
               aria-hidden="true"
             >
-              {displayCharacter}
+              {character}
             </span>
           )
         })}

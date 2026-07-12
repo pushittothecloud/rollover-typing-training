@@ -252,40 +252,48 @@
   width: min(100%, 46rem);
   min-height: 4.25rem;
   padding: 1rem 1.2rem;
-  border: 1px solid rgba(230, 222, 210, 0.14);
-  background: rgba(10, 10, 10, 0.42);
-  color: rgba(230, 222, 210, 0.94);
-  font-size: 2rem;
-  line-height: 1.35;
+  border: 1px solid rgba(100, 116, 139, 0.36);
+  border-radius: 12px;
+  background: #1e293b;
+  color: #f8fafc;
+  font-family: "Courier New", Courier, monospace;
+  font-size: clamp(1.55rem, 3.4vw, 1.85rem);
+  line-height: 1.6;
   text-align: left;
   overflow-wrap: anywhere;
 }
 
 .typed-char {
   white-space: pre;
+  color: #64748b;
 }
 
 .typed-char.is-untyped {
-  color: rgba(230, 222, 210, 0.9);
+  color: #64748b;
 }
 
 .typed-char.is-correct {
-  color: #ffffff;
+  color: #38bdf8;
 }
 
 .typed-char.is-incorrect {
-  color: #f87171;
+  color: #ef4444;
+  background-color: rgba(239, 68, 68, 0.12);
+  border-radius: 2px;
+}
+
+.typed-char.is-current {
+  color: #ffffff;
+  border-bottom: 3px solid #38bdf8;
+  padding-bottom: 1px;
 }
 
 .typed-char.target-active {
-  color: #fff0c3;
-  text-decoration: underline;
-  text-underline-offset: 0.16em;
-  text-decoration-thickness: 0.08em;
+  color: #ffffff;
 }
 
 .typed-char.target-complete {
-  color: rgba(230, 222, 210, 0.44);
+  color: #64748b;
   text-decoration: none;
 }
 
