@@ -19,11 +19,6 @@ const { ISOLATED_STREAK_REQUIRED, WORDS_REQUIRED, METRONOME_ISOLATED_REPS, METRO
 const clampMetronomeStartBpm = (bpm: number) => Math.min(300, Math.max(50, bpm))
 const ikiToBpm = (iki: number) => Math.round(60000 / iki)
 
-const getRotatedItems = (items: string[], activeIndex: number) => {
-  if (items.length === 0) return []
-  return [...items.slice(activeIndex), ...items.slice(0, activeIndex)]
-}
-
 const buildPreviewItems = (
   practiceItems: string[],
   activeIndex: number,
@@ -32,19 +27,20 @@ const buildPreviewItems = (
   isolatedSuccessStreak: number,
 ) => {
   const previewItems: Array<{ item: string; state: "active" | "upcoming" }> = []
-  const rotatedPracticeItems = getRotatedItems(practiceItems, activeIndex)
 
   if (currentPhase === "isolated" || currentPhase === "metronome") {
     const repeats = currentPhase === "isolated" ? Math.max(1, 5 - isolatedSuccessStreak) : 4
+    const activeItem = practiceItems[0] ?? orderedTrainingTargets[currentTargetIndex]
     for (let count = 0; count < repeats; count += 1) {
       previewItems.push({
-        item: rotatedPracticeItems[0] ?? orderedTrainingTargets[currentTargetIndex],
+        item: activeItem,
         state: count === 0 ? "active" : "upcoming",
       })
     }
   } else {
-    rotatedPracticeItems.forEach((item, index) => {
-      previewItems.push({ item, state: index === 0 ? "active" : "upcoming" })
+    practiceItems.forEach((item, index) => {
+      const actualIndex = (activeIndex + index) % practiceItems.length
+      previewItems.push({ item, state: actualIndex === 0 ? "active" : "upcoming" })
     })
   }
 
@@ -56,7 +52,7 @@ const buildPreviewItems = (
     words.forEach((word) => {
       if (previewItems.length >= 28) return
       const alreadyCovered =
-        targetOffset === 0 && currentPhase !== "isolated" && rotatedPracticeItems.includes(word)
+        targetOffset === 0 && currentPhase !== "isolated" && practiceItems.includes(word)
       if (!alreadyCovered) previewItems.push({ item: word, state: "upcoming" })
     })
     targetOffset += 1
@@ -148,6 +144,17 @@ function App() {
     snap.currentPhase,
     snap.isolatedSuccessStreak,
   )
+
+  // Build superimposed display: typed (white) + needed (grey)
+  const buildSuperimposedDisplay = () => {
+    const remaining = snap.currentPrompt.slice(snap.currentInput.length)
+    return (
+      <>
+        <span style={{ color: "white" }}>{snap.currentInput}</span>
+        <span style={{ color: "#666" }}>{remaining}</span>
+      </>
+    )
+  }
 
   return (
     <div className={`typing-trainer-shell is-${flashTone}`}>
@@ -253,7 +260,7 @@ function App() {
           )}
 
           <div className="typed-display" aria-live="polite">
-            {snap.currentInput || "Start typing\u2026"}
+            {snap.currentInput === "" ? "Start typing\u2026" : buildSuperimposedDisplay()}
           </div>
 
           <input
