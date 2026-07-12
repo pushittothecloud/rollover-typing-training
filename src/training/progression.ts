@@ -8,14 +8,15 @@ import { orderedTrainingTargets, targetWordBank } from './targets'
 
 const ISOLATED_STREAK_REQUIRED = 5
 const WORDS_REQUIRED = 10
-const METRONOME_REPS_PER_STEP = 5
+const METRONOME_ISOLATED_REPS = 5
+const METRONOME_WORDS_REPS = 10
 const METRONOME_IKI_STEP = 25
-const METRONOME_INITIAL_MULTIPLIER = 6
 
 export const PROGRESSION_CONSTANTS = {
   ISOLATED_STREAK_REQUIRED,
   WORDS_REQUIRED,
-  METRONOME_REPS_PER_STEP,
+  METRONOME_ISOLATED_REPS,
+  METRONOME_WORDS_REPS,
 } as const
 
 const getWordsForTarget = (target: string) => targetWordBank[target] ?? [target]
@@ -34,7 +35,7 @@ const setActivePrompt = (state: TrainingState, promptIndex: number) => {
 }
 
 const syncPracticeItems = (state: TrainingState, phase: TrainingPhase) => {
-  if (phase === 'isolated' || phase === 'metronome') {
+  if (phase === 'isolated') {
     state.practiceItems = [state.currentTarget]
     setActivePrompt(state, 0)
     return
@@ -45,22 +46,30 @@ const syncPracticeItems = (state: TrainingState, phase: TrainingPhase) => {
     setActivePrompt(state, 0)
     return
   }
+
+  // metronome phase — check subphase
+  if (state.metronomeSubPhase === 'isolated') {
+    state.practiceItems = [state.currentTarget]
+    setActivePrompt(state, 0)
+    return
+  }
+
+  // metronome words
+  state.practiceItems = getWordsForTarget(state.currentTarget)
+  setActivePrompt(state, 0)
 }
 
 const advancePracticePrompt = (state: TrainingState) => {
-  if (state.currentPhase === 'isolated') {
+  const isIsolatedPhase = state.currentPhase === 'isolated' ||
+    (state.currentPhase === 'metronome' && state.metronomeSubPhase === 'isolated')
+
+  if (isIsolatedPhase) {
     state.currentPrompt = state.currentTarget
     state.currentPromptIndex = 0
     return
   }
 
   setActivePrompt(state, state.currentPromptIndex + 1)
-}
-
-const resetPhaseProgress = (state: TrainingState) => {
-  state.isolatedSuccessStreak = 0
-  state.wordsCompleted = 0
-  state.metronomeRepsAtSpeed = 0
 }
 
 const moveToNextTarget = (state: TrainingState) => {
@@ -78,9 +87,10 @@ const moveToNextTarget = (state: TrainingState) => {
 
 const enterMetronomePhase = (state: TrainingState) => {
   state.currentPhase = 'metronome'
-  state.wordsCompleted = 0
-  state.metronomePhaseIKI = state.targetIKI * METRONOME_INITIAL_MULTIPLIER
+  state.metronomeSubPhase = 'isolated'
   state.metronomeRepsAtSpeed = 0
+  state.metronomeWordsCompleted = 0
+  state.metronomeCurrentIKI = state.metronomeStartIKI
   syncPracticeItems(state, 'metronome')
 }
 
@@ -90,13 +100,12 @@ export const advanceTrainingPhase = (isSuccess: boolean) => {
       state.isolatedSuccessStreak = isSuccess ? state.isolatedSuccessStreak + 1 : 0
 
       if (state.isolatedSuccessStreak < ISOLATED_STREAK_REQUIRED) {
-        syncPracticeItems(state, state.currentPhase)
         return state.currentPhase
       }
 
       state.currentPhase = 'words'
       state.isolatedSuccessStreak = 0
-      syncPracticeItems(state, state.currentPhase)
+      syncPracticeItems(state, 'words')
       return state.currentPhase
     }
 
@@ -115,33 +124,68 @@ export const advanceTrainingPhase = (isSuccess: boolean) => {
     }
 
     // metronome phase
-    if (isSuccess) {
-      state.metronomeRepsAtSpeed += 1
-    } else {
-      state.metronomeRepsAtSpeed = 0
-    }
+    if (state.metronomeSubPhase === 'isolated') {
+      if (isSuccess) {
+        state.metronomeRepsAtSpeed += 1
+      } else {
+        state.metronomeRepsAtSpeed = 0
+      }
 
-    if (state.metronomeRepsAtSpeed < METRONOME_REPS_PER_STEP) {
+      if (state.metronomeRepsAtSpeed < METRONOME_ISOLATED_REPS) {
+        return state.currentPhase
+      }
+
+      // Move to metronome words
+      state.metronomeSubPhase = 'words'
+      state.metronomeRepsAtSpeed = 0
+      state.metronomeWordsCompleted = 0
+      syncPracticeItems(state, 'metronome')
       return state.currentPhase
     }
 
-    state.metronomeRepsAtSpeed = 0
+    // metronome words phase
+    if (isSuccess) {
+      state.metronomeWordsCompleted += 1
+      advancePracticePrompt(state)
+    }
 
-    if (state.metronomePhaseIKI <= state.targetIKI) {
-      // Completed at target speed — advance to next target
+    if (state.metronomeWordsCompleted < METRONOME_WORDS_REPS) {
+      return state.currentPhase
+    }
+
+    // Completed metronome words — check if we should speed up or finish target
+    if (state.metronomeCurrentIKI <= state.targetIKI) {
+      // Hit target speed — move to next target
       state.history.push(state.currentTarget)
       moveToNextTarget(state)
       state.currentPhase = 'isolated'
-      resetPhaseProgress(state)
+      state.isolatedSuccessStreak = 0
+      state.wordsCompleted = 0
+      state.metronomeRepsAtSpeed = 0
+      state.metronomeWordsCompleted = 0
       syncPracticeItems(state, 'isolated')
       return state.currentPhase
     }
 
-    // Speed up the metronome
-    state.metronomePhaseIKI = Math.max(
-      state.targetIKI,
-      state.metronomePhaseIKI - METRONOME_IKI_STEP,
-    )
+    // Still above target speed
+    if (state.autoSpeedUp) {
+      // Speed up and loop back to metronome/isolated
+      state.metronomeCurrentIKI = Math.max(
+        state.targetIKI,
+        state.metronomeCurrentIKI - METRONOME_IKI_STEP,
+      )
+      state.metronomeSubPhase = 'isolated'
+      state.metronomeRepsAtSpeed = 0
+      state.metronomeWordsCompleted = 0
+      syncPracticeItems(state, 'metronome')
+    } else {
+      // Fixed tempo — loop back to metronome/isolated
+      state.metronomeSubPhase = 'isolated'
+      state.metronomeRepsAtSpeed = 0
+      state.metronomeWordsCompleted = 0
+      syncPracticeItems(state, 'metronome')
+    }
+
     return state.currentPhase
   })
 }

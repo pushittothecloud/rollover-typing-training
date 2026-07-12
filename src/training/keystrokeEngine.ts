@@ -98,7 +98,7 @@ export const processTargetKeystroke = (
       const measuredIKI = getMeasuredIKI(engineState.targetTimestamps, target.length)
       const effectiveTargetIKI =
         trainingState.currentPhase === 'metronome'
-          ? trainingState.metronomePhaseIKI
+          ? trainingState.metronomeCurrentIKI
           : trainingState.targetIKI
       const isSuccess = measuredIKI <= effectiveTargetIKI
 

@@ -10,12 +10,16 @@ export interface TrainingState {
   currentTarget: string
   currentPhase: TrainingPhase
   targetIKI: number
-  metronomePhaseIKI: number
+  metronomeStartIKI: number
+  metronomeCurrentIKI: number
+  autoSpeedUp: boolean
   metronomeRepsAtSpeed: number
+  metronomeSubPhase: 'isolated' | 'words'
   history: string[]
   currentTargetIndex: number
   isolatedSuccessStreak: number
   wordsCompleted: number
+  metronomeWordsCompleted: number
   practiceItems: string[]
   currentPrompt: string
   currentPromptIndex: number
@@ -27,6 +31,9 @@ export interface TrainingState {
 
 const initialTarget = orderedTrainingTargets[0]
 
+const bpmToIki = (bpm: number) => Math.round(60000 / Math.max(50, bpm))
+const METRONOME_DEFAULT_BPM = 100 // = 600ms IKI
+
 const listeners = new Set<() => void>()
 
 const createTrainingSnapshot = (state: TrainingState): TrainingState => ({
@@ -35,18 +42,20 @@ const createTrainingSnapshot = (state: TrainingState): TrainingState => ({
   practiceItems: [...state.practiceItems],
 })
 
-const METRONOME_INITIAL_MULTIPLIER = 6
-
 export const trainingState: TrainingState = {
   currentTarget: initialTarget,
   currentPhase: 'isolated',
   targetIKI: 50,
-  metronomePhaseIKI: 50 * METRONOME_INITIAL_MULTIPLIER,
+  metronomeStartIKI: bpmToIki(METRONOME_DEFAULT_BPM),
+  metronomeCurrentIKI: bpmToIki(METRONOME_DEFAULT_BPM),
+  autoSpeedUp: true,
   metronomeRepsAtSpeed: 0,
+  metronomeSubPhase: 'isolated',
   history: [],
   currentTargetIndex: 0,
   isolatedSuccessStreak: 0,
   wordsCompleted: 0,
+  metronomeWordsCompleted: 0,
   practiceItems: [initialTarget],
   currentPrompt: initialTarget,
   currentPromptIndex: 0,
@@ -85,10 +94,25 @@ export const setTargetIKI = (targetIKI: number) => {
   })
 }
 
-export const setMetronomePhaseIKI = (iki: number) => {
+export const setMetronomeStartIKI = (bpm: number) => {
+  const iki = bpmToIki(bpm)
   mutateTrainingState((state) => {
-    state.metronomePhaseIKI = Math.max(state.targetIKI, Math.min(1000, iki))
-    state.metronomeRepsAtSpeed = 0
+    state.metronomeStartIKI = iki
+    if (state.currentPhase !== 'metronome') {
+      state.metronomeCurrentIKI = iki
+    }
+  })
+}
+
+export const setAutoSpeedUp = (enabled: boolean) => {
+  mutateTrainingState((state) => {
+    state.autoSpeedUp = enabled
+  })
+}
+
+export const setMetronomeCurrentIKI = (iki: number) => {
+  mutateTrainingState((state) => {
+    state.metronomeCurrentIKI = Math.max(state.targetIKI, Math.min(1200, iki))
   })
 }
 
