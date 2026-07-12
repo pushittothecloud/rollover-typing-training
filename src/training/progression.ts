@@ -26,36 +26,15 @@ const isWordsPracticePhase = (state: TrainingState) =>
   (state.currentPhase === 'metronome' && state.metronomeSubPhase === 'words')
 
 const buildParagraphPrompt = (focusWord: string, target: string) => {
-  const companionWords = getWordsForTarget(target).filter((word) => word !== focusWord)
-  const companionA = companionWords[0] ?? target
-  const companionB = companionWords[1] ?? focusWord
+  const pool = [focusWord, ...getWordsForTarget(target).filter((word) => word !== focusWord)]
+  const stream: string[] = []
 
-  return [
-    'we',
-    'thread',
-    focusWord,
-    'through',
-    'a',
-    'calm',
-    'drafting',
-    'line',
-    'then',
-    'cycle',
-    companionA,
-    'and',
-    companionB,
-    'while',
-    'keeping',
-    target,
-    'steady',
-    'across',
-    'the',
-    'paragraph',
-    'until',
-    'timing',
-    'feels',
-    'automatic',
-  ].join(' ')
+  // Keep words mode as a clean rolling stream of words without sentence filler.
+  for (let index = 0; index < 14; index += 1) {
+    stream.push(pool[index % pool.length])
+  }
+
+  return stream.join(' ')
 }
 
 const setActivePrompt = (state: TrainingState, promptIndex: number) => {

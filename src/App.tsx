@@ -150,12 +150,23 @@ function App() {
     const prompt = snap.currentPrompt
     const normalizedPrompt = prompt.toLowerCase()
     const normalizedInput = snap.currentInput.toLowerCase()
-    const promptTarget = resolvePromptTarget(
-      snap.currentPrompt,
-      snap.currentTarget,
-      snap.history,
+    const isWordsPhase =
+      snap.currentPhase === "words" ||
+      (snap.currentPhase === "metronome" && snap.metronomeSubPhase === "words")
+    const activePracticeWord = snap.practiceItems[snap.currentPromptIndex] ?? snap.currentTarget
+    const promptTarget = (
+      isWordsPhase
+        ? activePracticeWord
+        : resolvePromptTarget(
+          snap.currentPrompt,
+          snap.currentTarget,
+          snap.history,
+        )
     ).toLowerCase()
-    const targetStartIndex = normalizedPrompt.indexOf(promptTarget)
+
+    const escapedTarget = promptTarget.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
+    const wholeWordMatch = normalizedPrompt.match(new RegExp(`\\b${escapedTarget}\\b`))
+    const targetStartIndex = wholeWordMatch?.index ?? normalizedPrompt.indexOf(promptTarget)
     const targetLength = promptTarget.length
 
     let correctPrefixLength = 0
